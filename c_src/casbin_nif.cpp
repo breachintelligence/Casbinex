@@ -3,6 +3,7 @@
 #include <pqxx/pqxx>
 #include "casbin/data_types.h"
 #include "casbin/casbin.h"
+#include "pg_adapter.h"
 
 #define PF_ATOM_TRUE enif_make_atom(env, "true")
 #define PF_ATOM_FALSE enif_make_atom(env, "false")
@@ -75,9 +76,18 @@ ERL_NIF_TERM CreateEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   string policyPath = ListToString(env, argv[1]);
 
   try{
-    enforcer = new casbin::CachedEnforcer(modelPath, policyPath);
+    
+    enforcer = new casbin::CachedEnforcer(
+      modelPath, 
+      std::shared_ptr<casbinex::PgAdapter>(
+        new casbinex::PgAdapter(policyPath)));
+
   } catch(const casbin::MissingRequiredSections &e) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Missing required sections"));
+  } catch(std::logic_error e) {
+    return  make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e.what()));
+  } catch(std::runtime_error e) {
+    return  make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e.what()));
   } catch(std::exception e) {
     return  make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e.what()));
   }

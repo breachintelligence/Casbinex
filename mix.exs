@@ -9,6 +9,7 @@ defmodule Mix.Tasks.Compile.Casbin do
         "-shared",
         "-o", "casbin.so",
         "c_src/casbin_nif.cpp",
+        "c_src/pg_adapter.cpp",
         "c_src/lib/linux/libpqxx.a",
         "c_src/lib/linux/casbin.a",
         # "-lpqxx",
