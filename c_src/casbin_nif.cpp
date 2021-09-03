@@ -76,11 +76,15 @@ ERL_NIF_TERM CreateEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   string policyPath = ListToString(env, argv[1]);
 
   try{
-    
-    enforcer = new casbin::CachedEnforcer(
-      modelPath, 
-      std::shared_ptr<casbinex::PgAdapter>(
-        new casbinex::PgAdapter(policyPath)));
+
+    if(policyPath.substr(0, strlen("postgres")) == "postgres"){    
+      enforcer = new casbin::CachedEnforcer(
+        modelPath, 
+        std::shared_ptr<casbinex::PgAdapter>(
+          new casbinex::PgAdapter(policyPath)));
+    } else {
+      enforcer = new casbin::CachedEnforcer(modelPath, policyPath);
+    }
 
   } catch(const casbin::MissingRequiredSections &e) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Missing required sections"));

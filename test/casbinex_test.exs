@@ -2,7 +2,7 @@ defmodule CasbinexTest do
   use ExUnit.Case
   # import_config "config.exs"
 
-  @pgconnection Application.fetch_env!(:casbinex, :pg_connection)
+  @pgconnection Application.fetch_env!(:casbinex, :pgconnection)
   @model_path Application.fetch_env!(:casbinex, :model_path)
 
   doctest Casbinex
@@ -10,8 +10,7 @@ defmodule CasbinexTest do
   test "enforces user policies correctly" do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
-      # assert :true == Casbinex.enforce('alice', 'data1', 'read')
-      assert :true == Casbinex.enforce('g:1', 'c:-1', 'read')
+      assert :true == Casbinex.enforce('alice', 'data1', 'read')
       assert :false == Casbinex.enforce('attacker', 'data1', 'read')
 
       assert :ok == Casbinex.destroyEnforcer();
@@ -21,8 +20,7 @@ defmodule CasbinexTest do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
       # alice is in the data2_admin group
-      assert :true == Casbinex.enforce('g:1', 'c:-1', 'read')
-      assert :true == Casbinex.enforce('g:1', 'c:-1', 'write')
+      assert :true == Casbinex.enforce('alice', 'data2', 'write')
       assert :false == Casbinex.enforce('attacker', 'data2', 'read')
 
       assert :ok == Casbinex.destroyEnforcer();
