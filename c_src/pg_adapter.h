@@ -13,6 +13,7 @@ class PgAdapter : virtual public casbin::Adapter {
 
         // NewAdapter is the constructor for Adapter.
         PgAdapter(std::string connectionString);
+        virtual ~PgAdapter() final {}
 
         // LoadPolicy loads all policy rules from the storage.
         virtual void LoadPolicy(casbin::Model* model);
