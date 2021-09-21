@@ -17,6 +17,7 @@
 * casbin in C++ environment
 */
 
+#include "data_types.h"
 #include "enforcer.h"
 #include "enforcer_cached.h"
 #include "enforcer_synced.h"

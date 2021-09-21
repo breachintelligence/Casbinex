@@ -1,7 +1,6 @@
 
 
 #define CATCH_CONFIG_MAIN
-#include <casbin/data_types.h>
 #include <casbin/casbin.h>
 #include <pqxx/pqxx>
 #include "../pg_adapter.h"

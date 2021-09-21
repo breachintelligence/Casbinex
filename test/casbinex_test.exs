@@ -1,8 +1,7 @@
 defmodule CasbinexTest do
   use ExUnit.Case
-  # import_config "config.exs"
 
-  @pgconnection Application.fetch_env!(:casbinex, :pgconnection)
+  @pgconnection Application.fetch_env!(:casbinex, :pg_connection)
   @model_path Application.fetch_env!(:casbinex, :model_path)
 
   doctest Casbinex
