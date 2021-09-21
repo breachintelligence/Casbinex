@@ -5,7 +5,7 @@ OBJS =  pg_adapter.o
 CFLAGS = --std=c++17 -fPIC -Wall
 CC = g++
 INCLUDES = -I../include
-LIBS =  -L../lib/linux ../lib/linux/libpqxx.a ../lib/linux/casbin.a -lpq
+LIBS =  -L../linux/lib ../linux/lib/libpqxx.a ../linux/lib/casbin.a -lpq
 
 all:main
 
