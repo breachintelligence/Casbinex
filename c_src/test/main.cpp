@@ -4,6 +4,7 @@
 #include <casbin/casbin.h>
 #include <pqxx/pqxx>
 #include "../pg_adapter.h"
+#include <string>
 #include <iostream>
 #include "catch.hpp"
 #include "config/config.h"
@@ -18,9 +19,9 @@ using namespace casbin;
 TEST_CASE("PGAdapter is created and injected correctly") {
   try{    
     std::shared_ptr<casbin::CachedEnforcer> enforcer = 
-    std::shared_ptr<casbin::CachedEnforcer>(new casbin::CachedEnforcer(
+    std::make_shared<casbin::CachedEnforcer>(
       MODEL_PATH, 
-      std::shared_ptr<casbinex::PgAdapter>(new casbinex::PgAdapter(POSTGRES_URL))));
+      std::make_shared<casbinex::PgAdapter>(POSTGRES_URL));
 
     // no exception thrown is a pass
     REQUIRE(!enforcer->IsFiltered()); 
@@ -38,7 +39,7 @@ TEST_CASE("enforces group channel associations correctly") {
     std::shared_ptr<casbin::CachedEnforcer> enforcer = 
     std::shared_ptr<casbin::CachedEnforcer>(new casbin::CachedEnforcer(
       MODEL_PATH, 
-      std::shared_ptr<casbinex::PgAdapter>(new casbinex::PgAdapter(POSTGRES_URL))));
+      std::shared_ptr<casbin::Adapter>(new casbinex::PgAdapter(POSTGRES_URL))));
 
     REQUIRE(enforcer->Enforce(VALID_GROUP_CHANNEL_ACTION));
     REQUIRE(!enforcer->Enforce(INVALID_GROUP_CHANNEL_ACTION));
@@ -56,7 +57,7 @@ TEST_CASE("Adds and removes the policy row in the casbin db table") {
     std::shared_ptr<casbin::CachedEnforcer> enforcer = 
     std::shared_ptr<casbin::CachedEnforcer>(new casbin::CachedEnforcer(
       MODEL_PATH, 
-      std::shared_ptr<casbinex::PgAdapter>(new casbinex::PgAdapter(POSTGRES_URL))));
+      std::shared_ptr<casbin::Adapter>(new casbinex::PgAdapter(POSTGRES_URL))));
 
     enforcer->AddPolicy({"tester", "data1", "read"});
     enforcer->InvalidateCache();
@@ -84,7 +85,7 @@ TEST_CASE("Adds and removes groups in the casbin db table") {
     std::shared_ptr<casbin::CachedEnforcer> enforcer = 
     std::shared_ptr<casbin::CachedEnforcer>(new casbin::CachedEnforcer(
       MODEL_PATH, 
-      std::shared_ptr<casbinex::PgAdapter>(new casbinex::PgAdapter(POSTGRES_URL))));
+      std::shared_ptr<casbin::Adapter>(new casbinex::PgAdapter(POSTGRES_URL))));
 
     enforcer->AddPolicy({"admin_data1", "data1", "write"});
     enforcer->AddRoleForUser("tester", "admin_data1");
@@ -108,7 +109,7 @@ TEST_CASE("Properly saves the entire policy to the db") {
     std::shared_ptr<casbin::CachedEnforcer> enforcer = 
     std::shared_ptr<casbin::CachedEnforcer>(new casbin::CachedEnforcer(
       MODEL_PATH, 
-      std::shared_ptr<casbinex::PgAdapter>(new casbinex::PgAdapter(POSTGRES_URL))));
+      std::shared_ptr<casbin::Adapter>(new casbinex::PgAdapter(POSTGRES_URL))));
 
       REQUIRE(enforcer->Enforce(VALID_GROUP_CHANNEL_ACTION));
       enforcer->SavePolicy();
@@ -123,3 +124,4 @@ TEST_CASE("Properly saves the entire policy to the db") {
     REQUIRE(false);
   }
 }
+
