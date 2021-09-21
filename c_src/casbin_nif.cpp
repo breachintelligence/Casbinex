@@ -88,6 +88,10 @@ ERL_NIF_TERM CreateEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
   } catch(const casbin::MissingRequiredSections &e) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Missing required sections"));
+  } catch(const casbin::CasbinEnforcerException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Casbin Enforcer exception"));
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
   } catch(std::logic_error e) {
     return  make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e.what()));
   } catch(std::runtime_error e) {
@@ -186,8 +190,10 @@ ERL_NIF_TERM GetUsersForRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   string role = ListToString(env, argv[0]);
   try{
     return VectorToList(env, enforcer->GetUsersForRole(role));
-  } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(...) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
 }
 
@@ -199,8 +205,8 @@ ERL_NIF_TERM GetRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   string user = ListToString(env, argv[0]);
   try{
     return VectorToList(env, enforcer->GetRolesForUser(user));
-  } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+  } catch(...) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
 }
 
@@ -215,8 +221,10 @@ ERL_NIF_TERM DeleteRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return enforcer->DeleteRole({role})
       ?PF_ATOM_TRUE
       :PF_ATOM_FALSE;
-  } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(...) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
 }
 
@@ -232,8 +240,10 @@ ERL_NIF_TERM AddRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     return enforcer->AddRoleForUser(user, role)
       ?PF_ATOM_TRUE
       :PF_ATOM_FALSE;
-  } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(...) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
 }
 
@@ -249,8 +259,10 @@ ERL_NIF_TERM AddRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     return enforcer->AddRolesForUser(user, roles)
       ?PF_ATOM_TRUE
       :PF_ATOM_FALSE;
-  } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(...) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
 }
 
@@ -265,8 +277,10 @@ ERL_NIF_TERM DeleteRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     return enforcer->DeleteRolesForUser(user)
       ?PF_ATOM_TRUE
       :PF_ATOM_FALSE;
-  } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(...) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
 }
 
@@ -283,6 +297,8 @@ ERL_NIF_TERM DeleteRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
     return enforcer->DeleteRoleForUser(user, role)
       ?PF_ATOM_TRUE
       :PF_ATOM_FALSE;
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
   } catch(std::exception e2) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
   }

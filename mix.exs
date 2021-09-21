@@ -1,21 +1,53 @@
 defmodule Mix.Tasks.Compile.Casbin do
   def run(_args) do
-    {result, _errcode} = System.cmd("/usr/bin/g++",
-      ["--std=c++17",
-        "-I", "c_src/include",
-        "-fPIC",
-        "-O2",
-        "-Lc_src/lib/linux",
-        "-shared",
-        "-o", "casbin.so",
-        "c_src/casbin_nif.cpp",
-        "c_src/pg_adapter.cpp",
-        "c_src/lib/linux/libpqxx.a",
-        "c_src/lib/linux/casbin.a",
-        # "-lpqxx",
-        "-lpq",
-      ], stderr_to_stdout: true)
-    IO.puts(result)
+
+    case :os.type() do
+      {:win32, _} ->
+        "start"
+
+      {:unix, :darwin} ->
+        {result, _errcode} = System.cmd("/usr/bin/g++",
+          ["--std=c++17",
+          "-I", "c_src/include",
+          "-I", "c_src/macos/include",
+          "-I", "/usr/local/lib/erlang/usr/include/",
+          "-I", "/usr/local/opt/libpq/include",
+          "-fPIC",
+          "-O2",
+          "-Lc_src/lib/macos",
+          "-L/usr/local/opt/libpq/lib",
+          "-L/usr/local/opt/erlang/lib/erlang/lib",
+          "-dynamiclib",
+          "-o", "casbin-ex.so",
+          "c_src/casbin_nif.cpp",
+          "c_src/pg_adapter.cpp",
+          "c_src/macos/lib/casbin.a",
+          "-lpqxx",
+          "-lpq",
+          "-flat_namespace",
+          "-undefined", "suppress",
+
+          ], stderr_to_stdout: true)
+        IO.puts(result)
+
+      {:unix, _} ->
+        {result, _errcode} = System.cmd("/usr/bin/g++",
+          ["--std=c++17",
+            "-I", "c_src/include",
+            "-I", "c_src/linux/include",
+            "-fPIC",
+            "-O2",
+            "-Lc_src/linux/lib",
+            "-shared",
+            "-o", "casbin-ex.so",
+            "c_src/casbin_nif.cpp",
+            "c_src/pg_adapter.cpp",
+            "c_src/linux/lib/libpqxx.a",
+            "c_src/linux/lib/casbin.a",
+            "-lpq",
+          ], stderr_to_stdout: true)
+        IO.puts(result)
+    end
   end
 end
 
