@@ -1,5 +1,5 @@
 /*
-* Copyright 2020 The casbin Authors. All Rights Reserved.
+* Copyright 2021 The casbin Authors. All Rights Reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,17 +13,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* This file is the root header which is to be included by the client to use
-* casbin in C++ environment
+* This is the main file for python bindings workflow
 */
 
-#include "data_types.h"
-#include "enforcer.h"
-#include "enforcer_cached.h"
-#include "enforcer_synced.h"
-#include "config/config.h"
-#include "persist.h"
-#include "util.h"
-#include "exception.h"
-#include "rbac.h"
-#include "abac_data.h"
+#ifndef CASBIN_CPP_CASBIN_H
+#define CASBIN_CPP_CASBIN_H
+
+#include "casbin_types.h"
+#include "casbin_enforcer.h"
+#include "casbin_helpers.h"
+#include "duktape/duktape.h"
+#include "duktape/duk_config.h"
+
+#endif //CASBIN_CPP_CASBIN_H

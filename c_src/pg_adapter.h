@@ -1,7 +1,7 @@
 #ifndef CASBINEX_PG_ADAPTER
 #define CASBINEX_PG_ADAPTER
 
-#include "casbin/persist/adapter.h"
+#include "casbin/casbin.h"
 
 namespace casbinex {
 
@@ -16,10 +16,10 @@ class PgAdapter : virtual public casbin::Adapter {
         virtual ~PgAdapter() final {}
 
         // LoadPolicy loads all policy rules from the storage.
-        virtual void LoadPolicy(casbin::Model* model);
+        virtual void LoadPolicy(const std::shared_ptr<casbin::Model>& model);
 
         // SavePolicy saves all policy rules to the storage.
-        virtual void SavePolicy(casbin::Model* model);
+        virtual void SavePolicy(const std::shared_ptr<casbin::Model>& model);
 
         // AddPolicy adds a policy rule to the storage.
         virtual void AddPolicy(std::string sec, std::string p_type, std::vector<std::string> rule);
@@ -34,7 +34,7 @@ class PgAdapter : virtual public casbin::Adapter {
         virtual bool IsFiltered();
 
     private:
-      void  LoadPolicyLine(std::vector<std::string> tokens, casbin::Model* model);
+      void  LoadPolicyLine(std::vector<std::string> tokens, const std::shared_ptr<casbin::Model>& model);
 };
 
 };  // namespace casbin
