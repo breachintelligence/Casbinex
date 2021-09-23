@@ -6,7 +6,7 @@ defmodule Casbinex do
   @on_load :load_nifs
 
   def load_nifs do
-    :erlang.load_nif('./casbin-ex', 0)
+    :erlang.load_nif('./casbinex_nif', 0)
   end
 
   def createEnforcer(_modelpath, _policypath) do

@@ -1,11 +1,11 @@
 
 
 #define CATCH_CONFIG_MAIN
+#include <string>
+#include <iostream>
 #include <casbin/casbin.h>
 #include <pqxx/pqxx>
 #include "../pg_adapter.h"
-#include <string>
-#include <iostream>
 #include "catch.hpp"
 #include "config/config.h"
 

@@ -17,10 +17,11 @@ ifeq ($(OS),Windows_NT)
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
-	LIBS =  -L../linux/lib ../linux/lib/libpqxx.a ../linux/lib/casbin.a -lpq
+			INCLUDES += -I../linux/include
+			LIBS =  -L../linux/lib ../linux/lib/casbin.a ../linux/lib/libpqxx.a -lpq
     endif
     ifeq ($(UNAME_S),Darwin)
-	LIBS = -L/usr/local/opt/libpq/lib -L/usr/local/opt/erlang/lib/erlang/lib  -L../macos/lib ../macos/lib/casbin.a -lpq -lpqxx
+			LIBS = -L/usr/local/opt/libpq/lib -L/usr/local/opt/libpqxx/lib -L/usr/local/opt/erlang/lib/erlang/lib  -L../macos/lib ../macos/lib/casbin.a -lpq -lpqxx
     endif
     UNAME_P := $(shell uname -p)
     ifeq ($(UNAME_P),x86_64)

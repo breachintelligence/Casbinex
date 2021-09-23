@@ -1,7 +1,6 @@
 #include <erl_nif.h>
 #include <string>
 #include <pqxx/pqxx>
-#include "casbin/data_types.h"
 #include "casbin/casbin.h"
 #include "pg_adapter.h"
 

@@ -1,6 +1,5 @@
 #include "pg_adapter.h"
-#include <casbin/util/util.h>
-#include <casbin/exception/unsupported_operation_exception.h>
+#include <casbin/casbin.h>
 #include <pqxx/pqxx>
 #include <strings.h>
 #include <iostream>
@@ -9,7 +8,7 @@
 using namespace casbinex;
 
 // LoadPolicyLine loads a text line as a policy rule to model.
-void PgAdapter::LoadPolicyLine(std::vector<std::string> tokens, casbin::Model* model) {
+void PgAdapter::LoadPolicyLine(std::vector<std::string> tokens, const std::shared_ptr<casbin::Model>& model) {
     for (std::size_t i = 0; i < tokens.size(); i++)
         tokens[i] = casbin::Trim(tokens[i]);
 
@@ -49,7 +48,7 @@ connectionString(connectionString)
 }
 
 // LoadPolicy loads all policy rules from the storage.
-void PgAdapter::LoadPolicy(casbin::Model* model)
+void PgAdapter::LoadPolicy(const std::shared_ptr<casbin::Model>& model)
 {
 
   pqxx::connection c{connectionString};
@@ -69,7 +68,7 @@ void PgAdapter::LoadPolicy(casbin::Model* model)
 }
 
 // SavePolicy saves all policy rules to the storage.
-void PgAdapter::SavePolicy(casbin::Model* model)
+void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
 {
   if(!model) return;
 
