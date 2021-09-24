@@ -1,7 +1,7 @@
 #!make
 SHELL = /bin/sh
 
-OBJS =  pg_adapter.o
+OBJS =  pg_adapter.o pg_pool.o
 CFLAGS = -std=c++17 -fPIC -Wall
 CC = g++
 INCLUDES = -I../include
@@ -41,6 +41,9 @@ all:main
 
 main:$(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o test $(OBJS) main.cpp $(LIBS)
+
+pg_pool.o: ../pg_pool.cpp
+	$(CC) $(CFLAGS) $(INCLUDES) -c ../pg_pool.cpp
 
 pg_adapter.o: ../pg_adapter.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c ../pg_adapter.cpp
