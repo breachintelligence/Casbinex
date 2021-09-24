@@ -2,6 +2,8 @@
 #define CASBINEX_PG_ADAPTER
 
 #include "casbin/casbin.h"
+#include "pqxx/pqxx"
+#include "pg_pool.h"
 
 namespace casbinex {
 
@@ -35,6 +37,7 @@ class PgAdapter : virtual public casbin::Adapter {
 
     private:
       void  LoadPolicyLine(std::vector<std::string> tokens, const std::shared_ptr<casbin::Model>& model);
+      PGPool _pgPool;
 };
 
 };  // namespace casbin

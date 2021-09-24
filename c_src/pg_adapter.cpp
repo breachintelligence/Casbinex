@@ -1,6 +1,5 @@
 #include "pg_adapter.h"
 #include <casbin/casbin.h>
-#include <pqxx/pqxx>
 #include <strings.h>
 #include <iostream>
 #include <optional>
@@ -24,13 +23,14 @@ void PgAdapter::LoadPolicyLine(std::vector<std::string> tokens, const std::share
 
 // NewAdapter is the constructor for Adapter.
 PgAdapter::PgAdapter(std::string connectionString):
-connectionString(connectionString)
+connectionString(connectionString),
+_pgPool(connectionString.c_str())
 {
   this->file_path = connectionString;
   this->filtered = false;
-  pqxx::connection c{connectionString};
-  
-  pqxx::work txn{c};
+
+  std::shared_ptr<pqxx::connection> c = _pgPool.connection();  
+  pqxx::work txn{reinterpret_cast<pqxx::connection&>(*c.get())};
   txn.exec( R"(CREATE TABLE IF NOT EXISTS casbin_rule (
     id integer NOT NULL,
     ptype character varying,
@@ -51,8 +51,8 @@ connectionString(connectionString)
 void PgAdapter::LoadPolicy(const std::shared_ptr<casbin::Model>& model)
 {
 
-  pqxx::connection c{connectionString};
-  pqxx::work txn{c};
+  PoolConnection c{_pgPool};
+  pqxx::work txn{ c.connection() };
   pqxx::result r{txn.exec("select ptype, v0, v1, v2, v3, v4, v5, v6 from casbin_rule")};
 
   model->ClearPolicy();
@@ -72,8 +72,8 @@ void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
 {
   if(!model) return;
 
-  pqxx::connection c{connectionString};
-  pqxx::work txn{c};
+  PoolConnection c{_pgPool};
+  pqxx::work txn{ c.connection() };
 
   txn.exec("truncate table casbin_rule;");
   pqxx::stream_to stream = pqxx::stream_to::table(
@@ -94,7 +94,7 @@ void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
 
         for(std::size_t ii = 0; ii <=6; ++ii)
           (rule.size() > ii) 
-            ?row.push_back(c.esc(rule[ii]))
+            ?row.push_back(c.ptr()->esc(rule[ii]))
             :row.push_back(std::nullopt);
 
         stream << row;
@@ -111,7 +111,7 @@ void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
 
         for(std::size_t ii = 0; ii <= 6; ++ii) 
           (rule.size() > ii)
-            ?row.push_back(c.esc(rule[ii]))
+            ?row.push_back(c.ptr()->esc(rule[ii]))
             :row.push_back(std::nullopt);
 
         stream << row;
@@ -126,15 +126,15 @@ void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
 // AddPolicy adds a policy rule to the storage.
 void PgAdapter::AddPolicy(std::string sec, std::string p_type, std::vector<std::string> rule)
 {
-  pqxx::connection c{connectionString};
-  pqxx::work txn{c};
+  PoolConnection c{_pgPool};
+  pqxx::work txn{ c.connection() };
   pqxx::params values;
 
-  c.prepare("insert_row", "INSERT INTO casbin_rule ( ptype, v0, v1, v2, v3, v4, v5, v6 ) values ( $1, $2, $3, $4, $5, $6, $7, $8);");
+  c.ptr()->prepare("insert_row", "INSERT INTO casbin_rule ( ptype, v0, v1, v2, v3, v4, v5, v6 ) values ( $1, $2, $3, $4, $5, $6, $7, $8);");
   
-  values.append(c.esc(p_type));
+  values.append(c.ptr()->esc(p_type));
   for(std::string v : rule) 
-    values.append(c.esc(v));
+    values.append(c.ptr()->esc(v));
 
   while(values.size() < 8)
     values.append(std::nullopt);
@@ -146,12 +146,11 @@ void PgAdapter::AddPolicy(std::string sec, std::string p_type, std::vector<std::
 // RemovePolicy removes a policy rule from the storage.
 void PgAdapter::RemovePolicy(std::string sec, std::string p_type, std::vector<std::string> rule)
 {
-
-  pqxx::connection c{connectionString};
-  pqxx::work txn{c};
+  PoolConnection c{_pgPool};
+  pqxx::work txn{ c.connection() };
 
   auto quote = [&c](std::string_view field) {
-    return "'" + c.esc(field) + "'";
+    return "'" + c.ptr()->esc(field) + "'";
   };
 
   std::string query = "DELETE FROM polarity.casbin_rule where ";
