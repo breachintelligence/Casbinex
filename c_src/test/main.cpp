@@ -125,3 +125,34 @@ TEST_CASE("Properly saves the entire policy to the db") {
   }
 }
 
+
+TEST_CASE("remove filtered policies db", "[out]") {
+  try{    
+    std::shared_ptr<casbin::CachedEnforcer> enforcer = 
+    std::shared_ptr<casbin::CachedEnforcer>(new casbin::CachedEnforcer(
+      MODEL_PATH, 
+      std::shared_ptr<casbin::Adapter>(new casbinex::PgAdapter(POSTGRES_URL))));
+
+    auto ps = enforcer->GetFilteredPolicy(1, {"c:17"});
+    enforcer->RemoveFilteredPolicy(1, {"c:17"});
+
+    //ensure rules removed
+    enforcer->InvalidateCache();
+    REQUIRE(enforcer->GetFilteredPolicy(1, {"c:17"}).size() == 0);    
+
+    //restore rules
+    for(auto r : ps) enforcer->addPolicy("p", "p", r);
+
+    // ensure the rules were restored
+    enforcer->InvalidateCache();
+    REQUIRE(ps == enforcer->GetFilteredPolicy(1, {"c:17"}));
+
+  } catch(const pqxx::sql_error& e) {
+    std::cout << e.what() << std::endl;
+    REQUIRE(false);
+  } catch(const std::exception& e) {
+    std::cout << e.what() << std::endl;
+    REQUIRE(false);
+  }
+}
+

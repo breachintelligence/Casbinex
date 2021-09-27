@@ -40,13 +40,13 @@ endif
 all:main
 
 main:$(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o test $(OBJS) main.cpp $(LIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -o test $(OBJS) main.cpp $(LIBS)
 
 pg_pool.o: ../pg_pool.cpp
-	$(CC) $(CFLAGS) $(INCLUDES) -c ../pg_pool.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c ../pg_pool.cpp
 
 pg_adapter.o: ../pg_adapter.cpp
-	$(CC) $(CFLAGS) $(INCLUDES) -c ../pg_adapter.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c ../pg_adapter.cpp
 
 clean:
 	-rm -f *.o core *.core

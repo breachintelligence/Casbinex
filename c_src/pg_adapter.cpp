@@ -128,18 +128,31 @@ void PgAdapter::AddPolicy(std::string sec, std::string p_type, std::vector<std::
 {
   PoolConnection c{_pgPool};
   pqxx::work txn{ c.connection() };
-  pqxx::params values;
+  std::string columns;
+  std::string values;
 
-  c.ptr()->prepare("insert_row", "INSERT INTO casbin_rule ( ptype, v0, v1, v2, v3, v4, v5, v6 ) values ( $1, $2, $3, $4, $5, $6, $7, $8);");
+  auto quote = [&c](std::string_view field) {
+    return "'" + c.ptr()->esc(field) + "'";
+  };
   
-  values.append(c.ptr()->esc(p_type));
-  for(std::string v : rule) 
-    values.append(c.ptr()->esc(v));
+  columns = ("ptype");
+  values = (quote(p_type));
 
-  while(values.size() < 8)
-    values.append(std::nullopt);
+  if(rule.size() > 0){ columns += ",v0"; values += ", " + quote(rule[0]); }
+  if(rule.size() > 1){ columns += ",v1"; values += ", " + quote(rule[1]); }
+  if(rule.size() > 2){ columns += ",v2"; values += ", " + quote(rule[2]); }
+  if(rule.size() > 3){ columns += ",v3"; values += ", " + quote(rule[3]); }
+  if(rule.size() > 4){ columns += ",v4"; values += ", " + quote(rule[4]); }
+  if(rule.size() > 5){ columns += ",v5"; values += ", " + quote(rule[5]); }
+  if(rule.size() > 6){ columns += ",v6"; values += ", " + quote(rule[6]); }
 
-  txn.exec_prepared("insert_row", values);
+  std::string query = "INSERT INTO casbin_rule (" + columns +") values (" + values + ");";
+
+  #ifdef DEBUG_LOG_QUERIES
+    std::cout << query << std::endl;
+  #endif
+  
+  txn.exec(query);
   txn.commit();
 }
 
@@ -165,6 +178,11 @@ void PgAdapter::RemovePolicy(std::string sec, std::string p_type, std::vector<st
   query += (rule.size() > 6)? " AND v6 = " + quote(rule[6]) : " AND v6 is NULL ";
   query += ";";
 
+
+  #ifdef DEBUG_LOG_QUERIES
+    std::cout << query << std::endl;
+  #endif
+
   txn.exec(query);
   txn.commit();
 }
@@ -172,7 +190,27 @@ void PgAdapter::RemovePolicy(std::string sec, std::string p_type, std::vector<st
 // RemoveFilteredPolicy removes policy rules that match the filter from the storage.
 void PgAdapter::RemoveFilteredPolicy(std::string sec, std::string p_type, int field_index, std::vector<std::string> field_values)
 {
-  throw casbin::UnsupportedOperationException("not implemented");
+  PoolConnection c{_pgPool};
+  pqxx::work txn{ c.connection() };
+
+  auto quote = [&c](std::string_view field) {
+    return "'" + c.ptr()->esc(field) + "'";
+  };
+
+  std::string query = "DELETE FROM polarity.casbin_rule where ";  
+
+  query += "ptype = " + quote(p_type);
+  for( unsigned int ii = static_cast<unsigned int>(field_index) ; ii < field_values.size() + field_index ; ++ii ) {
+    query += " AND v" + std::to_string(ii) + " = " +  quote(field_values[ii - field_index]);
+  }
+  query += ";";
+
+  #ifdef DEBUG_LOG_QUERIES
+    std::cout << query << std::endl;
+  #endif
+
+  txn.exec(query);
+  txn.commit();
 }
 
 // IsFiltered returns true if the loaded policy has been filtered.
