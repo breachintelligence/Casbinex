@@ -104,6 +104,7 @@ ERL_NIF_TERM CreateEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 ERL_NIF_TERM DestroyEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(enforcer) delete enforcer;
+  enforcer = nullptr;
   return PF_ATOM_OK;
 }
 
