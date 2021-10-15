@@ -3,3 +3,4 @@ c_src/test/*.o
 _build
 ./*.so
 *.so
+priv/casbinex_nif

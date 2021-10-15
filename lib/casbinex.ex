@@ -6,7 +6,16 @@ defmodule Casbinex do
   @on_load :load_nifs
 
   def load_nifs do
-    :erlang.load_nif(:filename.join(:code.priv_dir(:casbinex), "casbinex_nif"), 0)
+    with {:error, :bad_name} <- :code.priv_dir(:casbinex) do
+      dir = :filename.join([
+        :filename.dirname(:code.which(Casbinex)),
+        "..",
+        "priv"
+      ])
+      :erlang.load_nif(:filename.join(dir, "casbinex_nif"), 0)
+    else
+      dir -> :erlang.load_nif(:filename.join(dir, "casbinex_nif"), 0)
+    end
   end
 
   def createEnforcer(_modelpath, _policypath) do

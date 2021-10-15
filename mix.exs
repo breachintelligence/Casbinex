@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Compile.Casbin do
           "-L/usr/local/opt/libpq/lib",
           "-L/usr/local/opt/erlang/lib/erlang/lib",
           "-dynamiclib",
-          "-o", :filename.join(:code.priv_dir(:casbinex), "casbinex_nif.so"),
+          "-o", load_nif_path(),
           "c_src/casbin_nif.cpp",
           "c_src/pg_adapter.cpp",
           "c_src/pg_pool.cpp",
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Compile.Casbin do
             "-O2",
             "-Lc_src/linux/lib",
             "-shared",
-            "-o", :filename.join(:code.priv_dir(:casbinex), "casbinex_nif.so"),
+            "-o", load_nif_path(),
             "c_src/casbin_nif.cpp",
             "c_src/pg_adapter.cpp",
             "c_src/pg_pool.cpp",
@@ -49,6 +49,19 @@ defmodule Mix.Tasks.Compile.Casbin do
             "-lpq",
           ], stderr_to_stdout: true)
         IO.puts(result)
+    end
+  end
+
+  defp load_nif_path() do
+    with {:error, :bad_name} <- :code.priv_dir(:casbinex) |> IO.inspect() do
+      dir = :filename.join([
+        :filename.dirname(:code.which(Casbinex)),
+        "..",
+        "priv"
+      ])
+      :filename.join(dir, "casbinex_nif")
+    else
+      dir -> :filename.join(dir, "casbinex_nif")
     end
   end
 end
