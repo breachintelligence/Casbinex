@@ -35,7 +35,7 @@ defmodule Mix.Tasks.Compile.Casbin do
         IO.puts(result)
 
       {:unix, _} ->
-        {result, _errcode} = System.cmd("/usr/bin/echo",
+        {result, _errcode} = System.cmd("/usr/bin/g++",
           ["--std=c++17",
             "-I", "c_src/include",
             "-I", "c_src/linux/include",
