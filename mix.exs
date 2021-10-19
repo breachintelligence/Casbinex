@@ -1,5 +1,8 @@
 defmodule Mix.Tasks.Compile.Casbin do
   def run(_args) do
+    root_dir = :code.root_dir()
+    erts_dir = Path.join(root_dir, "erts-#{:erlang.system_info(:version)}")
+    erts_include_dir = Path.join(erts_dir, "include")
 
     case :os.type() do
       {:win32, _} ->
@@ -32,10 +35,11 @@ defmodule Mix.Tasks.Compile.Casbin do
         IO.puts(result)
 
       {:unix, _} ->
-        {result, _errcode} = System.cmd("/usr/bin/g++",
+        {result, _errcode} = System.cmd("/usr/bin/echo",
           ["--std=c++17",
             "-I", "c_src/include",
             "-I", "c_src/linux/include",
+            "-I", erts_include_dir,
             "-fPIC",
             "-O2",
             "-Lc_src/linux/lib",
