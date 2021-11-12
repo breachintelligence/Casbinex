@@ -57,6 +57,7 @@ defmodule Mix.Tasks.Compile.Casbin do
   end
 
   defp load_nif_path() do
+    :code.priv_dir(:casbinex)
     with {:error, :bad_name} <- :code.priv_dir(:casbinex) do
       "../../_build/#{Mix.env()}/lib/casbinex/priv/casbinex_nif.so"
     else
