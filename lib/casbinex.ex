@@ -6,6 +6,7 @@ defmodule Casbinex do
   @on_load :load_nifs
 
   def load_nifs do
+    :code.priv_dir(:casbinex)
     with {:error, :bad_name} <- :code.priv_dir(:casbinex) do
       dir = :filename.join([
         :filename.dirname(:code.which(Casbinex)),
