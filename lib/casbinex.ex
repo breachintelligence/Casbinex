@@ -6,7 +6,8 @@ defmodule Casbinex do
   @on_load :load_nifs
 
   def load_nifs do
-    :erlang.load_nif("./casbinex", 0)
+    path = Application.app_dir(:kinext, ["priv", "casbinex"])
+    :erlang.load_nif(path, 0)
   end
 
   def createEnforcer(_modelpath, _policypath) do
