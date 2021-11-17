@@ -1,60 +1,7 @@
 defmodule Mix.Tasks.Compile.Casbin do
   def run(_args) do
-    root_dir = :code.root_dir()
-    erts_dir = Path.join(root_dir, "erts-#{:erlang.system_info(:version)}")
-    erts_include_dir = Path.join(erts_dir, "include")
-
-    case :os.type() do
-      {:win32, _} ->
-        "start"
-
-      {:unix, :darwin} ->
-        {result, _errcode} = System.cmd("/usr/bin/g++",
-          ["--std=c++17",
-          "-I", "c_src/include",
-          "-I", "c_src/macos/include",
-          "-I", "/usr/local/lib/erlang/usr/include/",
-          "-I", "/usr/local/opt/libpq/include",
-          "-fPIC",
-          "-O2",
-          "-Lc_src/macos/lib",
-          "-L/usr/local/opt/libpq/lib",
-          "-L/usr/local/opt/erlang/lib/erlang/lib",
-          "-dynamiclib",
-          "-shared",
-          "-o", "casbinex.so",
-          "c_src/casbin_nif.cpp",
-          "c_src/pg_adapter.cpp",
-          "c_src/pg_pool.cpp",
-          "c_src/macos/lib/casbin.a",
-          "-lpqxx",
-          "-lpq",
-          "-flat_namespace",
-          "-undefined", "suppress",
-
-          ], stderr_to_stdout: true)
-        IO.puts(result)
-
-      {:unix, _} ->
-        {result, _errcode} = System.cmd("/usr/bin/g++",
-          ["--std=c++17",
-            "-I", "c_src/include",
-            "-I", "c_src/linux/include",
-            "-I", erts_include_dir,
-            "-fPIC",
-            "-O2",
-            "-Lc_src/linux/lib",
-            "-shared",
-            "-o", "casbinex.so",
-            "c_src/casbin_nif.cpp",
-            "c_src/pg_adapter.cpp",
-            "c_src/pg_pool.cpp",
-            "c_src/linux/lib/libpqxx.a",
-            "c_src/linux/lib/casbin.a",
-            "-lpq",
-          ], stderr_to_stdout: true)
-        IO.puts(result)
-    end
+    {result, _errcode} = System.cmd("make", ["priv/casbinex_nif.so"], stderr_to_stdout: true)
+    IO.puts(result)
   end
 end
 
@@ -65,7 +12,8 @@ defmodule Casbinex.MixProject do
     [
       app: :casbinex,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.3",
+      build_embedded: Mix.env == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       compilers: [:casbin] ++ Mix.compilers,
@@ -75,7 +23,8 @@ defmodule Casbinex.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      applications: [:logger]
     ]
   end
 
