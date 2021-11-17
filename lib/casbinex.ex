@@ -6,7 +6,7 @@ defmodule Casbinex do
   @on_load :load_nifs
 
   def load_nifs do
-    path = Application.app_dir(:kinext, ["priv", "casbinex"])
+    path = Application.app_dir(:casbinex, ["priv", "casbinex"])
     :erlang.load_nif(path, 0)
   end
 
