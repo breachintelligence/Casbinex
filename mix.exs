@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Compile.Casbin do
   def run(_args) do
-    {result, _errcode} = System.cmd("make", ["priv/casbinex.so"], stderr_to_stdout: true)
+    {result, _errcode} = System.cmd("make", ["priv/casbinex_nif.so"], stderr_to_stdout: true)
     IO.binwrite(result)
   end
 end
