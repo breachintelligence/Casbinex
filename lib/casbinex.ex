@@ -5,9 +5,10 @@ defmodule Casbinex do
 
   @on_load :load_nifs
 
+  app = Mix.Project.config[:app]
   def load_nifs do
-    path = Application.app_dir(:casbinex, ["priv", "casbinex"])
-    :erlang.load_nif(path, 0)
+    path = :filename.join(:code.priv_dir(unquote(app)), 'casbinex_nif')
+    :ok = :erlang.load_nif(path, 0)
   end
 
   def createEnforcer(_modelpath, _policypath) do
