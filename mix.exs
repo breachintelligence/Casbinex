@@ -1,8 +1,22 @@
 defmodule Mix.Tasks.Compile.Casbin do
+
+#TODO before release move compilation to makefile
+
+  def archMatch("aarch64-" <> _) do "arm64" end
+  def archMatch("arm64-" <> _) do "arm64" end
+  def archMatch(_) do "x86_64" end
+
+  def homebrewPath("arm64") do "/opt/homebrew" end
+  def homebrewPath("x86_64") do "/usr/local" end
+
   def run(_args) do
     root_dir = :code.root_dir()
     erts_dir = Path.join(root_dir, "erts-#{:erlang.system_info(:version)}")
     erts_include_dir = Path.join(erts_dir, "include")
+    sys_arch =  "#{:erlang.system_info(:system_architecture)}"
+    machine_arch = archMatch(sys_arch)
+    homebrew_prefix = homebrewPath(machine_arch)
+
 
     case :os.type() do
       {:win32, _} ->
@@ -13,19 +27,20 @@ defmodule Mix.Tasks.Compile.Casbin do
           ["--std=c++17",
           "-I", "c_src/include",
           "-I", "c_src/macos/include",
-          "-I", "/usr/local/lib/erlang/usr/include/",
-          "-I", "/usr/local/opt/libpq/include",
+          "-I", "#{homebrew_prefix}/lib/erlang/usr/include/",
+          "-I", "#{homebrew_prefix}/opt/libpq/include",
+          "-I", "#{homebrew_prefix}/opt/libpqxx/include",
           "-fPIC",
           "-O2",
-          "-Lc_src/macos/lib",
-          "-L/usr/local/opt/libpq/lib",
-          "-L/usr/local/opt/erlang/lib/erlang/lib",
+          "-L#{homebrew_prefix}/opt/libpq/lib",
+          "-L#{homebrew_prefix}/opt/libpqxx/lib",
+          "-L#{homebrew_prefix}/opt/erlang/lib/erlang/lib",
           "-dynamiclib",
           "-o", load_nif_path(),
           "c_src/casbin_nif.cpp",
           "c_src/pg_adapter.cpp",
           "c_src/pg_pool.cpp",
-          "c_src/macos/lib/casbin.a",
+          "c_src/macos/lib/#{machine_arch}/casbin.a",
           "-lpqxx",
           "-lpq",
           "-flat_namespace",
@@ -42,7 +57,7 @@ defmodule Mix.Tasks.Compile.Casbin do
             "-I", erts_include_dir,
             "-fPIC",
             "-O2",
-            "-Lc_src/linux/lib",
+            "-Lc_src/linux/lib/#{machine_arch}",
             "-shared",
             "-o", load_nif_path(),
             "c_src/casbin_nif.cpp",
