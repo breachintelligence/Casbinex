@@ -1,10 +1,3 @@
-defmodule Mix.Tasks.Compile.Casbin do
-  def run(_args) do
-    {result, _errcode} = System.cmd("make", ["priv/casbinex_nif.so"], stderr_to_stdout: true)
-    IO.puts(result)
-  end
-end
-
 defmodule Casbinex.MixProject do
   use Mix.Project
 
@@ -16,7 +9,9 @@ defmodule Casbinex.MixProject do
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      compilers: [:casbin] ++ Mix.compilers,
+      compilers: [:elixir_make | Mix.compilers()],
+      make_targets: ["all"],
+      make_clean: ["clean"]
     ]
   end
 
@@ -31,8 +26,7 @@ defmodule Casbinex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:elixir_make, "~> 0.6", runtime: false}
     ]
   end
 end
