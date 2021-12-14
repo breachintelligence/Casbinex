@@ -1,36 +1,52 @@
 MIX = mix
-CFLAGS += --std=c++17
+CXXFLAGS := --std=c++17
 
-ERLANG_PATH = $(shell erl -eval 'io:format("~s", [lists:concat([code:root_dir(), "/erts-", erlang:system_info(version), "/include"])])' -s init stop -noshell)
-CFLAGS += -Ic_src/include -I$(ERLANG_PATH)
+PRIV_DIR = ${MIX_APP_PATH}/priv
+LIB_NAME = $(PRIV_DIR)/casbinex_nif.so
 
-ifeq ($(wildcard deps/casbinex),)
-	CASBINEX_PATH = ../casbinex
-else
-	CASBINEX_PATH = deps/casbinex
-endif
+INCLUDES += -I${ERL_EI_INCLUDE_DIR} -Ic_src/include
+LIBS += -L${ERL_EI_LIBDIR} 
+SOURCES += c_src/casbin_nif.cpp c_src/pg_adapter.cpp c_src/pg_pool.cpp
+STATIC_LIBS = 
 
 ifneq ($(OS),Windows_NT)
-	LDFLAGS += c_src/casbin_nif.cpp c_src/pg_adapter.cpp c_src/pg_pool.cpp
-
 	ifeq ($(shell uname),Darwin)
-		CFLAGS += -Ic_src/macos/include -I/usr/local/lib/erlang/usr/include/ -L/usr/local/opt/libpq/lib
-		CFLAGS += -fPIC -O3 -Lc_src/macos/lib -L/usr/local/opt/libpq/lib -L/usr/local/opt/erlang/lib/erlang/lib -dynamiclib
-		LDFLAGS += c_src/macos/lib/casbin.a -lpqxx -lpq -flat_namespace -undefined suppress
+		# is mac
+		HOMEBREW_PREFIX = ${HOMEBREW_REPOSITORY}
+		MACHINE_ARCH = x86_64
+
+		ifeq ($(shell uname -m), arm64)
+       	  		MACHINE_ARCH = arm64
+		endif
+
+		INCLUDES +=  -I$(HOMEBREW_PREFIX)/opt/libpq/include -I$(HOMEBREW_PREFIX)/opt/libpqxx/include -Ic_src/macos/include
+		LIBS += -L$(HOMEBREW_PREFIX)/opt/libpq/lib -L$(HOMEBREW_PREFIX)/opt/libpqxx/lib -L${ERL_EI_LIBDIR} -lpqxx -lpqxx
+		STATIC_LIBS += c_src/macos/lib/$(MACHINE_ARCH)/casbin.a
+		CXXFLAGS += -flat_namespace -undefined suppress -dynamiclib 
+
 	else
-		CFLAGS += -Ic_src/linux/include -Lc_src/linux/lib -fPIC -O3
-		LDFLAGS += c_src/linux/lib/libpqxx.a c_src/linux/lib/casbin.a -lpq
+
+	# Is Linux 
+		CXXFLAGS += -shared
+		INCLUDES += -Ic_src/linux/include
+		LIBS += -Lc_src/linux/lib 
+		STATIC_LIBS += c_src/linux/lib/libpqxx.a c_src/linux/lib/casbin.a -lpq
+
 	endif
 endif
 
-.PHONY: all casbinex clean
+calling_from_make:
+	mix compile
 
-all: 
-	$(MIX) compile 
+all: $(PRIV_DIR) $(LIB_NAME)
 
-priv/casbinex_nif.so:
-	/usr/bin/g++ $(CFLAGS) -shared -o $@ $(LDFLAGS)
+$(PRIV_DIR):
+	mkdir -p $@
+
+$(LIB_NAME):
+	/usr/bin/g++ -fPIC -O3 $(CXXFLAGS)  $(INCLUDES)  $(LIBS) -o $@  $(SOURCES)  $(STATIC_LIBS)
 
 clean:
-	$(MIX) clean
-	$(RM) priv/*
+	$(RM) $(LIB_NAME)
+
+.PHONY: all calling_from_make clean
