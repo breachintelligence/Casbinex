@@ -3,4 +3,7 @@ c_src/test/*.o
 _build
 ./*.so
 *.so
-priv/casbinex_nif
+priv/casbinex_nifc_src/_deps
+c_src/_deps/
+.vscode/
+deps/
