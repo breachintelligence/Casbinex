@@ -1,27 +1,3 @@
-commands:
-  reusable-setup:
-    steps:
-      - run: sudo yum install git python ncurses-devel
-      - checkout
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: "Pull Submodules"
-          command: git submodule init && git submodule update --remote
-      - run: 
-          command: |
-            export NYEAR=`date +%y` 
-            export NMONTH=`date +%m` 
-            export NDAY=`date +%d` 
-            echo "export NYEAR=$NYEAR" >> $BASH_ENV
-            echo "export NMONTH=$NMONTH" >> $BASH_ENV
-            echo "export NDAY=$NDAY" >> $BASH_ENV
-      - run:
-          command: |
-            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-            aws configure set region us-east-1
-
 
 version: 2.1
 jobs:
@@ -29,43 +5,28 @@ jobs:
     macos:
       xcode: 11.3.0
     steps:
+      - checkout
       - run:
-          name: Installing awscli
-          command: |
-            sudo pip install --upgrade pip
-            sudo pip install awscli
-      - reusable-setup
-      - run:
-          name: install asdf
-          command: brew install asdf
-      - run:
-          name: install cmake
-          command: brew install cmake
-      - run:
-          name: install asdf
-          command: |
-            git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
-            echo ". ${HOME}/.asdf/asdf.sh" >> ${HOME}/.bashrc
-            . ${HOME}/.asdf/asdf.sh
-            asdf plugin add erlang
-            asdf plugin add elixir
-            asdf install erlang 24.0.4
-            asdf install elixir 1.12.2-otp-24
+          name: install elixir
+          command: brew install elixir libpq libpqxx
       - run:
           name: Make build
           command:  |
-            ${HOME}/.asdf/shims/mix deps.get
-            ${HOME}/.asdf/shims/mix compile
-            ${HOME}/.asdf/shims/mix test
+            mix local.hex --force
+            mix deps.get
+            mix compile
+            mix test
 
   build-mac-arm:
     machine: true
     resource_class: polarityio-corp/m1-mini      
     steps:
-      - reusable-setup
+      - checkout
       - run:
           name: Make build
           command:  |
+            export PATH=${PATH}:${HOME}/.asdf/shims
+            mix local.hex --force
             mix deps.get
             mix compile
             mix test
@@ -73,31 +34,20 @@ jobs:
 
   build-linux:
     docker:
+      - image: cimg/elixir:1.12.3
       - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/centos7:circleci
     working_directory: ~/project
     steps:
-      - reusable-setup
-      - run: sudo yum install ncurses-devel
-      - run: 
-          command: |
-            aws s3 cp s3://polarityio-prod-builds/utils/cmake/cmake-3.22.0-linux-x86_64.tar.gz cmake-3.22.0-linux-x86_64.tar.gz
-            tar zxvf cmake-3.22.0-linux-x86_64.tar.gz    
-      - run:
-          name: install asdf
-          command: |
-            git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
-            echo ". ${HOME}/.asdf/asdf.sh" >> ${HOME}/.bashrc
-            . ${HOME}/.asdf/asdf.sh
-            asdf plugin add erlang
-            asdf plugin add elixir
-            asdf install erlang 24.0.4
-            asdf install elixir 1.12.2-otp-24
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
           name: Make build
           command:  |
-            ${HOME}/.asdf/shims/mix deps.get
-            ${HOME}/.asdf/shims/mix compile
-            ${HOME}/.asdf/shims/mix test
+            mix local.hex --force
+            mix deps.get
+            mix compile
+            mix test
           
 
   tag-and-slack:
@@ -120,7 +70,14 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "fd:ee:41:72:fa:0a:25:e9:e2:db:8d:2a:60:5f:a8:d2"
-      - reusable-setup
+      - run: sudo yum -y install python-pip curl wget            
+      - run: sudo pip install awscli 
+      - run: 
+          command: | 
+             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} 
+             aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}  
+             aws configure set region us-east-1   
+      - checkout
       - run:
           name: download semtag
           command: aws s3 cp s3://polarityio-px-build/3.3.0/semtag bin/semtag      
@@ -153,23 +110,23 @@ jobs:
           command: |
             chmod +x bin/semtag   
             if [ "$buildmode" == "nightly" ]; then                                \
-              bin/semtag build -pob "nightly.:d"      > /tmp/workspace/version;   \
+              bin/semtag build -pob "nightly.:d"      > tmp_version;   \
             elif [ "$buildmode" == "alpha" ]; then                                \
-              bin/semtag alpha -apo $versionscope     > /tmp/workspace/version;   \
+              bin/semtag alpha -apo $versionscope     > tmp_version;   \
             elif [ "$buildmode" == "beta" ]; then                                 \
-              bin/semtag beta -apo $versionscope      > /tmp/workspace/version;   \
+              bin/semtag beta -apo $versionscope      > tmp_version;   \
             elif [ "$buildmode" == "candidate" ]; then                            \
-              bin/semtag candidate -apo $versionscope > /tmp/workspace/version;   \
+              bin/semtag candidate -apo $versionscope > tmp_version;   \
             elif [ "$buildmode" == "release" ]; then                              \
-              bin/semtag final -apo $versionscope     > /tmp/workspace/version;   \
+              bin/semtag final -apo $versionscope     > tmp_version;   \
             else                                                                  \
-              bin/semtag build -apo $versionscope     > /tmp/workspace/version;   \
+              bin/semtag build -apo $versionscope     > tmp_version;   \
             fi
             echo "branch: $CIRCLE_BRANCH"
             echo "buildmode: $buildmode"       
             echo "versionscope: $versionscope"
-            cat /tmp/workspace/version
-            echo "export PX_VERSION=\"$(cat /tmp/workspace/version)\"" >> $BASH_ENV 
+            cat tmp_version
+            echo "export PX_VERSION=\"$(cat tmp_version)\"" >> $BASH_ENV 
       - when:
           condition: << parameters.tag-commit >>
           steps:
