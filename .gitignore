@@ -5,4 +5,5 @@ _build
 *.so
 priv/casbinex_nif
 c_src/_deps/
+.vscode/
 deps/

@@ -1,7 +1,7 @@
 MIX = mix
 CXXFLAGS := --std=c++17
 
-MIX_APP_PATH := .
+MIX_APP_PATH ?= .
 PRIV_DIR = ${MIX_APP_PATH}/priv
 LIB_NAME = $(PRIV_DIR)/casbinex_nif.so
 DEPS_DIR = c_src/_deps
