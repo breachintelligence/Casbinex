@@ -1,6 +1,7 @@
 commands:
   reusable-setup:
     steps:
+      - run: sudo yum install git python ncurses-devel
       - checkout
       - attach_workspace:
           at: /tmp/workspace
@@ -45,7 +46,7 @@ jobs:
           command: |
             git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
             echo ". ${HOME}/.asdf/asdf.sh" >> ${HOME}/.bashrc
-            . ~/.asdf/asdf.sh
+            . ${HOME}/.asdf/asdf.sh
             asdf plugin add erlang
             asdf plugin add elixir
             asdf install erlang 24.0.4
@@ -53,9 +54,9 @@ jobs:
       - run:
           name: Make build
           command:  |
-            mix deps.get
-            mix compile
-            mix test
+            ${HOME}/.asdf/shims/mix deps.get
+            ${HOME}/.asdf/shims/mix compile
+            ${HOME}/.asdf/shims/mix test
 
   build-mac-arm:
     machine: true
@@ -72,10 +73,11 @@ jobs:
 
   build-linux:
     docker:
-        - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/px-build-centos7:latest
+      - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/centos7:circleci
     working_directory: ~/project
     steps:
       - reusable-setup
+      - run: sudo yum install ncurses-devel
       - run: 
           command: |
             aws s3 cp s3://polarityio-prod-builds/utils/cmake/cmake-3.22.0-linux-x86_64.tar.gz cmake-3.22.0-linux-x86_64.tar.gz
@@ -85,7 +87,7 @@ jobs:
           command: |
             git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
             echo ". ${HOME}/.asdf/asdf.sh" >> ${HOME}/.bashrc
-            . ~/.asdf/asdf.sh
+            . ${HOME}/.asdf/asdf.sh
             asdf plugin add erlang
             asdf plugin add elixir
             asdf install erlang 24.0.4
@@ -93,9 +95,9 @@ jobs:
       - run:
           name: Make build
           command:  |
-            mix deps.get
-            mix compile
-            mix test
+            ${HOME}/.asdf/shims/mix deps.get
+            ${HOME}/.asdf/shims/mix compile
+            ${HOME}/.asdf/shims/mix test
           
 
   tag-and-slack:
@@ -112,12 +114,12 @@ jobs:
         type: boolean
         default: true
     docker:
-      - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/px-build-centos7:minimal
+      - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/centos7:circleci
     working_directory: ~/project
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "ae:75:d7:9e:98:ed:9d:53:67:f4:7f:fb:09:36:92:5a"
+            - "fd:ee:41:72:fa:0a:25:e9:e2:db:8d:2a:60:5f:a8:d2"
       - reusable-setup
       - run:
           name: download semtag
