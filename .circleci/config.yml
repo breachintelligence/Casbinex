@@ -1,0 +1,200 @@
+commands:
+  reusable-setup:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: "Pull Submodules"
+          command: git submodule init && git submodule update --remote
+      - run: 
+          command: |
+            export NYEAR=`date +%y` 
+            export NMONTH=`date +%m` 
+            export NDAY=`date +%d` 
+            echo "export NYEAR=$NYEAR" >> $BASH_ENV
+            echo "export NMONTH=$NMONTH" >> $BASH_ENV
+            echo "export NDAY=$NDAY" >> $BASH_ENV
+      - run:
+          command: |
+            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+            aws configure set region us-east-1
+
+
+version: 2.1
+jobs:
+  build-mac:
+    macos:
+      xcode: 11.3.0
+    steps:
+      - run:
+          name: Installing awscli
+          command: |
+            sudo pip install --upgrade pip
+            sudo pip install awscli
+      - reusable-setup
+      - run:
+          name: install asdf
+          command: brew install asdf
+      - run:
+          name: install cmake
+          command: brew install cmake
+      - run:
+          name: install asdf
+          command: |
+            git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
+            echo ". ${HOME}/.asdf/asdf.sh" >> ${HOME}/.bashrc
+            . ~/.asdf/asdf.sh
+            asdf plugin add erlang
+            asdf plugin add elixir
+            asdf install erlang 24.0.4
+            asdf install elixir 1.12.2-otp-24
+      - run:
+          name: Make build
+          command:  |
+            mix deps.get
+            mix compile
+            mix test
+
+  build-mac-arm:
+    machine: true
+    resource_class: polarityio-corp/m1-mini      
+    steps:
+      - reusable-setup
+      - run:
+          name: Make build
+          command:  |
+            mix deps.get
+            mix compile
+            mix test
+
+
+  build-linux:
+    docker:
+        - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/px-build-centos7:latest
+    working_directory: ~/project
+    steps:
+      - reusable-setup
+      - run: 
+          command: |
+            aws s3 cp s3://polarityio-prod-builds/utils/cmake/cmake-3.22.0-linux-x86_64.tar.gz cmake-3.22.0-linux-x86_64.tar.gz
+            tar zxvf cmake-3.22.0-linux-x86_64.tar.gz    
+      - run:
+          name: install asdf
+          command: |
+            git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
+            echo ". ${HOME}/.asdf/asdf.sh" >> ${HOME}/.bashrc
+            . ~/.asdf/asdf.sh
+            asdf plugin add erlang
+            asdf plugin add elixir
+            asdf install erlang 24.0.4
+            asdf install elixir 1.12.2-otp-24
+      - run:
+          name: Make build
+          command:  |
+            mix deps.get
+            mix compile
+            mix test
+          
+
+  tag-and-slack:
+    parameters:
+      build-mode:
+        type: enum
+        default: "auto"
+        enum: [ "nightly", "auto", "alpha", "beta", "candidate", "release"]
+      version-scope:
+        type: enum
+        default: "auto"
+        enum: [ "major", "minor", "patch", "auto"]
+      tag-commit:
+        type: boolean
+        default: true
+    docker:
+      - image: 577326318091.dkr.ecr.us-east-1.amazonaws.com/polarity-aws-prod/px-build-centos7:minimal
+    working_directory: ~/project
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "ae:75:d7:9e:98:ed:9d:53:67:f4:7f:fb:09:36:92:5a"
+      - reusable-setup
+      - run:
+          name: download semtag
+          command: aws s3 cp s3://polarityio-px-build/3.3.0/semtag bin/semtag      
+      - run:
+          name: evaluate branch name into buildmode variable
+          command: |
+            export buildmode="<< parameters.build-mode >>"
+            if [ "$buildmode" == "auto" ] ; then                                                           \
+              [[ "$CIRCLE_BRANCH" =~ ^.*-alpha$ ]] && echo "export buildmode=alpha"  >> $BASH_ENV;  \
+              [[ "$CIRCLE_BRANCH" =~ ^.*-beta$ ]] && echo "export buildmode=beta"    >> $BASH_ENV;  \
+              [[ "$CIRCLE_BRANCH" =~ ^.*-rc$ ]] && echo "export buildmode=candidate" >> $BASH_ENV;  \
+              [[ "$CIRCLE_BRANCH" == "main" ]] && echo "export buildmode=release"         >> $BASH_ENV;  \
+            else                                                                                           \
+              echo "export buildmode=\"$buildmode\"" >> $BASH_ENV;                                         \
+            fi
+            echo "branch: $CIRCLE_BRANCH"
+            echo "buildmode: $buildmode"
+      - run:
+          name: decide scope of version bump
+          command: |
+            export versionscope="<< parameters.version-scope >>"
+            echo "versionscope: $versionscope"
+            if [ "$versionscope" == "auto" ] ; then                    \
+              echo "export versionscope=\"-s patch\""  >> $BASH_ENV;  
+            else
+              echo "export versionscope=\"-s $versionscope\"" >> $BASH_ENV;
+            fi
+      - run:
+          name: set version number
+          command: |
+            chmod +x bin/semtag   
+            if [ "$buildmode" == "nightly" ]; then                                \
+              bin/semtag build -pob "nightly.:d"      > /tmp/workspace/version;   \
+            elif [ "$buildmode" == "alpha" ]; then                                \
+              bin/semtag alpha -apo $versionscope     > /tmp/workspace/version;   \
+            elif [ "$buildmode" == "beta" ]; then                                 \
+              bin/semtag beta -apo $versionscope      > /tmp/workspace/version;   \
+            elif [ "$buildmode" == "candidate" ]; then                            \
+              bin/semtag candidate -apo $versionscope > /tmp/workspace/version;   \
+            elif [ "$buildmode" == "release" ]; then                              \
+              bin/semtag final -apo $versionscope     > /tmp/workspace/version;   \
+            else                                                                  \
+              bin/semtag build -apo $versionscope     > /tmp/workspace/version;   \
+            fi
+            echo "branch: $CIRCLE_BRANCH"
+            echo "buildmode: $buildmode"       
+            echo "versionscope: $versionscope"
+            cat /tmp/workspace/version
+            echo "export PX_VERSION=\"$(cat /tmp/workspace/version)\"" >> $BASH_ENV 
+      - when:
+          condition: << parameters.tag-commit >>
+          steps:
+            - run:
+                name: tag version number
+                command: |  
+                  git tag "$PX_VERSION" || echo "Could not tag commit"
+                  git push origin "$PX_VERSION" || echo "Did not push tag"
+      
+
+
+workflows:
+  build-release:
+    jobs:  
+      - build-linux
+      - build-mac
+      - build-mac-arm
+      - tag-and-slack:
+          # filters:
+          #   branches:
+          #     only:
+          #       - main
+          requires:
+            - build-linux
+            - build-mac
+            - build-mac-arm
+
+orbs:
+  aws-s3: circleci/aws-s3@1.0.15
+  win: circleci/windows@2.2.0
