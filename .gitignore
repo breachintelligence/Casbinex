@@ -4,3 +4,5 @@ _build
 ./*.so
 *.so
 priv/casbinex_nif
+c_src/_deps/
+deps/
