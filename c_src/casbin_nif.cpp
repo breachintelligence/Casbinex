@@ -344,7 +344,7 @@ ERL_NIF_TERM GetFilteredPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   }
 }
 
-ErlNifFunc nif_funcs[] = 
+ErlNifFunc casbinex_nif_funcs[] = 
 { 
     {"createEnforcer",       2, CreateEnforcer},
     {"destroyEnforcer",      0, DestroyEnforcer},
@@ -363,4 +363,4 @@ ErlNifFunc nif_funcs[] =
     {"getFilteredPolicy",    2, GetFilteredPolicy},
 };
 
-ERL_NIF_INIT(Elixir.Casbinex, nif_funcs, 0, 0, 0, 0);
+ERL_NIF_INIT(Elixir.Casbinex, casbinex_nif_funcs, 0, 0, 0, 0);
