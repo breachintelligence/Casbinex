@@ -26,6 +26,7 @@ jobs:
           name: Make build
           command:  |
             export PATH=${PATH}:${HOME}/.asdf/shims
+            asdf install
             mix local.hex --force
             mix deps.get
             mix compile
