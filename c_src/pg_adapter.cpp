@@ -57,11 +57,11 @@ void PgAdapter::LoadPolicy(const std::shared_ptr<casbin::Model>& model)
 
   model->ClearPolicy();
 
-  for(auto row: r){
+  for(int jj = 0; jj < r.size(); ++jj){    
     std::vector<std::string> policy_line;
 
-    for(int ii = 0; ii < row.size(); ++ii)
-      if(!row[ii].is_null()) policy_line.push_back(row[ii].c_str());
+    for(int ii = 0; ii < r.at(jj).size(); ++ii)
+      if(!r.at(jj).at(ii).is_null()) policy_line.push_back(r.at(jj).at(ii).c_str());
 
     LoadPolicyLine(policy_line, model);
   }
