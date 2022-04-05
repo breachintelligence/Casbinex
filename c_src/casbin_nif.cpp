@@ -363,4 +363,4 @@ ErlNifFunc casbinex_nif_funcs[] =
     {"getFilteredPolicy",    2, GetFilteredPolicy},
 };
 
-ERL_NIF_INIT(Elixir.Casbinex, casbinex_nif_funcs, 0, 0, 0, 0);
+ERL_NIF_INIT(Elixir.Casbinex.Base, casbinex_nif_funcs, 0, 0, 0, 0);
