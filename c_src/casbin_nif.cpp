@@ -110,7 +110,7 @@ ERL_NIF_TERM DestroyEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
 ERL_NIF_TERM Enforce(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string sub = ListToString(env, argv[0]);
@@ -128,7 +128,7 @@ ERL_NIF_TERM Enforce(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM AddPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string sub = ListToString(env, argv[0]);
@@ -147,7 +147,7 @@ ERL_NIF_TERM AddPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM RemovePolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string sub = ListToString(env, argv[0]);
@@ -166,7 +166,7 @@ ERL_NIF_TERM RemovePolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM AddGroupingPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string user  = ListToString(env, argv[0]);
@@ -184,7 +184,7 @@ ERL_NIF_TERM AddGroupingPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 
 ERL_NIF_TERM GetUsersForRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string role = ListToString(env, argv[0]);
@@ -199,7 +199,7 @@ ERL_NIF_TERM GetUsersForRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
 ERL_NIF_TERM GetRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string user = ListToString(env, argv[0]);
@@ -212,7 +212,7 @@ ERL_NIF_TERM GetRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
 ERL_NIF_TERM DeleteRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string role = ListToString(env, argv[0]);
@@ -230,7 +230,7 @@ ERL_NIF_TERM DeleteRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM AddRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string user = ListToString(env, argv[0]);
@@ -249,7 +249,7 @@ ERL_NIF_TERM AddRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 ERL_NIF_TERM AddRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string user = ListToString(env, argv[0]);
@@ -268,7 +268,7 @@ ERL_NIF_TERM AddRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
 ERL_NIF_TERM DeleteRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string user = ListToString(env, argv[0]);
@@ -287,7 +287,7 @@ ERL_NIF_TERM DeleteRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 
 ERL_NIF_TERM DeleteRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   string user = ListToString(env, argv[0]);
@@ -306,7 +306,7 @@ ERL_NIF_TERM DeleteRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 
 ERL_NIF_TERM RemoveFilteredPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   int fieldIndex = 0;
@@ -320,15 +320,17 @@ ERL_NIF_TERM RemoveFilteredPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM a
     return enforcer->RemoveFilteredPolicy(fieldIndex, resourceId)
       ?PF_ATOM_TRUE
       :PF_ATOM_FALSE;
-  } catch(...) {
-    return PF_ATOM_FALSE;
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(std::exception e2) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
   }
 }
 
 
 ERL_NIF_TERM GetFilteredPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if(!enforcer) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create and enforcer first."));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
   int fieldIndex = 0;
@@ -339,8 +341,10 @@ ERL_NIF_TERM GetFilteredPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 
   try{
     return VectorToList(env, enforcer->GetFilteredPolicy(fieldIndex, resourceId));
-  } catch(...) {
-    return PF_ATOM_FALSE;
+  } catch(const casbin::CasbinRBACException &e) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+  } catch(std::exception e2) {
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
   }
 }
 
