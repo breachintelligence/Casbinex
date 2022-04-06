@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build-mac:
     macos:
-      xcode: 11.3.0
+      xcode: 12.5.1
     steps:
       - checkout
       - run:
@@ -26,6 +26,7 @@ jobs:
           name: Make build
           command:  |
             export PATH=${PATH}:${HOME}/.asdf/shims
+            asdf install
             mix local.hex --force
             mix deps.get
             mix compile
