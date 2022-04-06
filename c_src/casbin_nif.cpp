@@ -33,11 +33,32 @@ string ListToString(ErlNifEnv* env, ERL_NIF_TERM term) {
   return string(stringData, res);
 }
 
+string BinToString(ErlNifEnv* env, ERL_NIF_TERM term) {
+  ERL_NIF_TERM maybeBin = term;
+
+  unsigned int listLength = 0;
+  ErlNifBinary term_bin;
+  if (!enif_inspect_iolist_as_binary(env, term, &term_bin))
+  {
+    // we blame the user if address isn't a string
+    return string();
+  }
+
+  return string(reinterpret_cast<char*>(term_bin.data), term_bin.size);
+}
+
 ERL_NIF_TERM VectorToList(ErlNifEnv* env, const vector<string> &input) {
   ERL_NIF_TERM enifList[input.size()];
 
   for(int ii = 0; ii < input.size(); ++ii) {
-    enifList[ii] = enif_make_string(env, input.at(ii).c_str(), ERL_NIF_LATIN1);
+    ERL_NIF_TERM component_term;
+    
+    const char* inputCharArray = (const char*)input.at(ii).c_str();
+    const int inputLength = strlen(inputCharArray);
+    char *component_term_bin = reinterpret_cast<char*>(enif_make_new_binary(env, inputLength, &component_term));
+    strncpy(component_term_bin, inputCharArray, inputLength);
+
+    enifList[ii] = component_term;
   }
 
   return enif_make_list_from_array(env, enifList, input.size());
@@ -65,14 +86,14 @@ vector<string> ListToVector(ErlNifEnv* env, ERL_NIF_TERM term) {
   items = term;
 
   while(enif_get_list_cell(env, items, &item, &items))    
-    resultVector.push_back(ListToString(env, item));
+    resultVector.push_back(BinToString(env, item));
 
   return resultVector;
 }
 
 ERL_NIF_TERM CreateEnforcer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-  string modelPath  = ListToString(env, argv[0]);
-  string policyPath = ListToString(env, argv[1]);
+  string modelPath  = BinToString(env, argv[0]);
+  string policyPath = BinToString(env, argv[1]);
 
   try{
 
@@ -113,9 +134,9 @@ ERL_NIF_TERM Enforce(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string sub = ListToString(env, argv[0]);
-  string obj = ListToString(env, argv[1]);
-  string act = ListToString(env, argv[2]);
+  string sub = BinToString(env, argv[0]);
+  string obj = BinToString(env, argv[1]);
+  string act = BinToString(env, argv[2]);
 
   try{
     return enforcer->Enforce({sub.c_str(), obj.c_str(), act.c_str()})
@@ -131,9 +152,9 @@ ERL_NIF_TERM AddPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string sub = ListToString(env, argv[0]);
-  string obj = ListToString(env, argv[1]);
-  string act = ListToString(env, argv[2]);
+  string sub = BinToString(env, argv[0]);
+  string obj = BinToString(env, argv[1]);
+  string act = BinToString(env, argv[2]);
 
   try{
     enforcer->InvalidateCache();
@@ -150,9 +171,9 @@ ERL_NIF_TERM RemovePolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string sub = ListToString(env, argv[0]);
-  string obj = ListToString(env, argv[1]);
-  string act = ListToString(env, argv[2]);
+  string sub = BinToString(env, argv[0]);
+  string obj = BinToString(env, argv[1]);
+  string act = BinToString(env, argv[2]);
 
   try{
     enforcer->InvalidateCache();
@@ -169,8 +190,8 @@ ERL_NIF_TERM AddGroupingPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string user  = ListToString(env, argv[0]);
-  string group = ListToString(env, argv[1]);
+  string user  = BinToString(env, argv[0]);
+  string group = BinToString(env, argv[1]);
 
   try{
     enforcer->InvalidateCache();
@@ -187,9 +208,10 @@ ERL_NIF_TERM GetUsersForRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string role = ListToString(env, argv[0]);
+  string role = BinToString(env, argv[0]);
   try{
-    return VectorToList(env, enforcer->GetUsersForRole(role));
+    ERL_NIF_TERM list = VectorToList(env, enforcer->GetUsersForRole(role));
+    return make_result_tuple( PF_ATOM_OK, list );
   } catch(const casbin::CasbinRBACException &e) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
   } catch(...) {
@@ -202,9 +224,10 @@ ERL_NIF_TERM GetRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string user = ListToString(env, argv[0]);
+  string user = BinToString(env, argv[0]);
   try{
-    return VectorToList(env, enforcer->GetRolesForUser(user));
+    ERL_NIF_TERM list = VectorToList(env, enforcer->GetRolesForUser(user));
+    return make_result_tuple( PF_ATOM_OK, list );
   } catch(...) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Unexpected exception"));
   }
@@ -215,7 +238,7 @@ ERL_NIF_TERM DeleteRole(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string role = ListToString(env, argv[0]);
+  string role = BinToString(env, argv[0]);
   try{
     enforcer->InvalidateCache();
     return enforcer->DeleteRole({role})
@@ -233,8 +256,8 @@ ERL_NIF_TERM AddRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string user = ListToString(env, argv[0]);
-  string role = ListToString(env, argv[1]);
+  string user = BinToString(env, argv[0]);
+  string role = BinToString(env, argv[1]);
   try{
     enforcer->InvalidateCache();
     return enforcer->AddRoleForUser(user, role)
@@ -252,7 +275,7 @@ ERL_NIF_TERM AddRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string user = ListToString(env, argv[0]);
+  string user = BinToString(env, argv[0]);
   vector<string> roles = ListToVector(env, argv[1]);
   try{
     enforcer->InvalidateCache();
@@ -271,7 +294,7 @@ ERL_NIF_TERM DeleteRolesForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string user = ListToString(env, argv[0]);
+  string user = BinToString(env, argv[0]);
   try{
     enforcer->InvalidateCache();
     return enforcer->DeleteRolesForUser(user)
@@ -290,8 +313,8 @@ ERL_NIF_TERM DeleteRoleForUser(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
     return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("Must create an enforcer first."));
   }
 
-  string user = ListToString(env, argv[0]);
-  string role = ListToString(env, argv[1]);
+  string user = BinToString(env, argv[0]);
+  string role = BinToString(env, argv[1]);
   try{
     enforcer->InvalidateCache();
     return enforcer->DeleteRoleForUser(user, role)
@@ -340,11 +363,12 @@ ERL_NIF_TERM GetFilteredPolicy(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   vector<string> resourceId = ListToVector(env, argv[1]);
 
   try{
-    return VectorToList(env, enforcer->GetFilteredPolicy(fieldIndex, resourceId));
+    ERL_NIF_TERM list = VectorToList(env, enforcer->GetFilteredPolicy(fieldIndex, resourceId));
+    return make_result_tuple( PF_ATOM_OK, list );
   } catch(const casbin::CasbinRBACException &e) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception"));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING("RBAC exception") );
   } catch(std::exception e2) {
-    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()));
+    return make_result_tuple( PF_ATOM_ERROR, PF_MAKE_STRING(e2.what()) );
   }
 }
 

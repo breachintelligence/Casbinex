@@ -29,11 +29,11 @@ defmodule CasbinexTest do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
       # alice is in the data2_admin group
-      assert ["alice"] == Casbinex.getUsersForRole("data2_admin")
+      assert { :ok, ["alice"] } == Casbinex.getUsersForRole("data2_admin")
 
       #add bob to the group
       assert :true == Casbinex.addGroupingPolicy("bob", "data2_admin")
-      assert ["bob", "alice"] == Casbinex.getUsersForRole("data2_admin")
+      assert { :ok, ["bob", "alice"] } == Casbinex.getUsersForRole("data2_admin")
 
       #delete the group
       assert :true == Casbinex.deleteRole("data2_admin")
@@ -45,7 +45,7 @@ defmodule CasbinexTest do
   test "get a list of roles for the user" do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
-      assert ["data2_admin"]  == Casbinex.getRolesForUser("alice")
+      assert { :ok, ["data2_admin"] }  == Casbinex.getRolesForUser("alice")
 
       assert :ok == Casbinex.destroyEnforcer();
   end
@@ -118,9 +118,9 @@ defmodule CasbinexTest do
   test "retrieves a filtered list of policies" do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
-      assert [
+      assert { :ok, [
         ["bob", "data2", "write"],
-        ["data2_admin", "data2", "write"]] = Casbinex.getFilteredPolicy(1, ["data2", "write"])
+        ["data2_admin", "data2", "write"]] } = Casbinex.getFilteredPolicy(1, ["data2", "write"])
 
       assert :ok == Casbinex.destroyEnforcer();
   end
@@ -128,13 +128,13 @@ defmodule CasbinexTest do
   test "removes a filtered list of policies" do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
-      assert [
+      assert { :ok, [
         ["bob", "data2", "write"],
         ["data2_admin", "data2", "write"]
-        ] = Casbinex.getFilteredPolicy(1, ["data2", "write"])
+        ] } = Casbinex.getFilteredPolicy(1, ["data2", "write"])
 
         Casbinex.removeFilteredPolicy(1, ["data2", "write"])
-        assert [] = Casbinex.getFilteredPolicy(1, ["data2", "write"])
+        assert { :ok, []} = Casbinex.getFilteredPolicy(1, ["data2", "write"])
 
       assert :ok == Casbinex.destroyEnforcer();
   end
@@ -142,13 +142,13 @@ defmodule CasbinexTest do
   test "removes a filtered list of policies when policy selector is charlist" do
     assert { :ok, _ } = Casbinex.createEnforcer(@model_path, @pgconnection)
 
-      assert [
+      assert { :ok, [
         ["bob", "data2", "write"],
         ["data2_admin", "data2", "read"],
-        ["data2_admin", "data2", "write"]] = Casbinex.getFilteredPolicy(1, "data2")
+        ["data2_admin", "data2", "write"]] } = Casbinex.getFilteredPolicy(1, "data2")
 
         Casbinex.removeFilteredPolicy(1, "data2")
-        assert [] = Casbinex.getFilteredPolicy(1, ["data2", "write"])
+        assert { :ok, [] } = Casbinex.getFilteredPolicy(1, ["data2", "write"])
 
       assert :ok == Casbinex.destroyEnforcer();
   end

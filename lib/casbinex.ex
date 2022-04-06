@@ -6,7 +6,7 @@ defmodule Casbinex do
   alias Casbinex.Base
 
   def createEnforcer(modelpath, policypath) do
-    Base.createEnforcer(String.to_charlist(modelpath), String.to_charlist(policypath))
+    Base.createEnforcer(modelpath, policypath)
   end
 
   def destroyEnforcer() do
@@ -14,91 +14,66 @@ defmodule Casbinex do
   end
 
   def enforce(sub, obj, act) do
-    Base.enforce(String.to_charlist(sub), String.to_charlist(obj), String.to_charlist(act))
+    Base.enforce(sub, obj, act)
   end
 
   def addPolicy(sub, obj, act) do
-    Base.addPolicy(String.to_charlist(sub), String.to_charlist(obj), String.to_charlist(act))
+    Base.addPolicy(sub, obj, act)
   end
 
   def removePolicy(sub, obj, act) do
-    Base.removePolicy(String.to_charlist(sub), String.to_charlist(obj), String.to_charlist(act))
+    Base.removePolicy(sub, obj, act)
   end
 
   def addGroupingPolicy(user, group) do
-    Base.addGroupingPolicy(String.to_charlist(user), String.to_charlist(group))
+    Base.addGroupingPolicy(user, group)
   end
 
   def getUsersForRole(role) do
-    case Base.getUsersForRole(String.to_charlist(role)) do
-      {:error, message} -> {:error, message}
-      list -> list_to_strings(list)
-    end
+    Base.getUsersForRole(role)
   end
 
   def getRolesForUser(user) do
-    case Base.getRolesForUser(String.to_charlist(user)) do
-      {:error, message} -> {:error, message}
-      list -> list_to_strings(list)
-    end
+    Base.getRolesForUser(user)
   end
 
   def deleteRole(role) do
-    Base.deleteRole(String.to_charlist(role))
+    Base.deleteRole(role)
   end
 
   def deleteRoleForUser(user, role) do
-    Base.deleteRoleForUser(String.to_charlist(user), String.to_charlist(role))
+    Base.deleteRoleForUser(user, role)
   end
 
   def deleteRolesForUser(user) do
-    Base.deleteRolesForUser(String.to_charlist(user))
+    Base.deleteRolesForUser(user)
   end
 
   def addRoleForUser(user, role) do
-    Base.addRoleForUser(String.to_charlist(user), String.to_charlist(role))
+    Base.addRoleForUser(user, role)
   end
 
   def addRolesForUser(user, roles) when is_list(roles) do
-    Base.addRolesForUser(String.to_charlist(user), list_to_charlists(roles))
+    Base.addRolesForUser(user, roles)
   end
 
   def addRolesForUser(user, roles) do
-    Base.addRoleForUser(String.to_charlist(user), String.to_charlist(roles))
+    Base.addRoleForUser(user, roles)
   end
 
   def getFilteredPolicy(fieldindex, fields) when is_list(fields) do
-    case Base.getFilteredPolicy(fieldindex, list_to_charlists(fields)) do
-      {:error, message} -> {:error, message}
-      list -> map_to_stringlists(list)
-    end
+    Base.getFilteredPolicy(fieldindex, fields)
   end
 
   def getFilteredPolicy(fieldindex, field) do
-    case Base.getFilteredPolicy(fieldindex, [String.to_charlist(field)]) do
-      {:error, message} -> {:error, message}
-      list -> map_to_stringlists(list)
-    end
+    Base.getFilteredPolicy(fieldindex, [field])
   end
 
   def removeFilteredPolicy(fieldindex, fields) when is_list(fields) do
-    Base.removeFilteredPolicy(fieldindex, list_to_charlists(fields))
+    Base.removeFilteredPolicy(fieldindex, fields)
   end
 
   def removeFilteredPolicy(fieldindex, field) do
-    Base.removeFilteredPolicy(fieldindex, [String.to_charlist(field)])
-  end
-
-  # Utility functions for converting lists of strings to charlists
-  defp list_to_charlists(list) do
-    list |> Enum.map(&to_charlist(&1))
-  end
-
-  defp list_to_strings(list) do
-    list |> Enum.map(&List.to_string(&1))
-  end
-
-  defp map_to_stringlists(list) do
-    list |> Enum.map(&list_to_strings(&1))
+    Base.removeFilteredPolicy(fieldindex, [field])
   end
 end
