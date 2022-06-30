@@ -49,6 +49,36 @@ jobs:
             mix deps.get
             mix compile
             mix test
+
+  build-linux-arm:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm.medium
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "fd:ee:41:72:fa:0a:25:e9:e2:db:8d:2a:60:5f:a8:d2"        
+      - run: sudo pip3 install awscli 
+      - run: 
+          command: | 
+             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} 
+             aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}  
+             aws configure set region us-east-1   
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Make build
+          command:  |
+            git clone https://github.com/asdf-vm/asdf.git .asdf --branch v0.10.0
+            . .asdf/asdf.sh
+            asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git
+            asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git
+            asdf install
+            mix local.hex --force
+            mix deps.get
+            mix compile
+            mix test
           
 
   tag-it:
@@ -143,6 +173,7 @@ workflows:
   build-release:
     jobs:  
       - build-linux
+      - build-linux-arm
       - build-mac
       - build-mac-arm
       - tag-it:
@@ -152,6 +183,7 @@ workflows:
                 - main
           requires:
             - build-linux
+            - build-linux-arm
             - build-mac
             - build-mac-arm
 
