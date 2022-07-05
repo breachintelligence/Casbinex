@@ -21,7 +21,7 @@ ifneq ($(OS),Windows_NT)
 		KERNEL_NAME = darwin
 
 		ifeq ($(shell uname -m), arm64)
-       	  		MACHINE_ARCH = arm64
+			MACHINE_ARCH = arm64
 		endif
 
 		INCLUDES +=  -I$(HOMEBREW_PREFIX)/opt/libpq/include -I$(HOMEBREW_PREFIX)/opt/libpqxx/include -Ic_src/macos/include
@@ -32,11 +32,19 @@ ifneq ($(OS),Windows_NT)
 
 	# Is Linux 
 		KERNEL_NAME = linux
-		MACHINE_ARCH = x64
 		CXXFLAGS += -shared
-		INCLUDES += -Ic_src/linux/include
-		LIBS += -Lc_src/linux/lib 
-		STATIC_LIBS += c_src/linux/lib/libpqxx.a -lpq
+
+		ifeq ($(shell uname -m), aarch64)
+			MACHINE_ARCH = arm64
+			INCLUDES += -Ic_src/linux/arm64/include
+			LIBS += -Lc_src/linux/arm64/lib 
+			STATIC_LIBS += c_src/linux/arm64/lib/libpqxx.a -lpq
+		else
+			MACHINE_ARCH = x64
+			INCLUDES += -Ic_src/linux/x64/include
+			LIBS += -Lc_src/linux/x64/lib 
+			STATIC_LIBS += c_src/linux/x64/lib/libpqxx.a -lpq
+		endif
 
 	endif
 endif
