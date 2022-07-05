@@ -67,28 +67,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-
-      - run: |
-          aws s3 cp s3://polarityio-prod-builds/utils/cmake/cmake-3.22.5-linux-arm64.tgz cmake-3.22.5-linux-arm64.tgz
-          tar zxvf cmake-3.22.5-linux-arm64.tgz
-          curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
-          sudo apt-get update && sudo apt-get install -y postgresql-server-dev-13 libpq-dev
-          wget https://github.com/jtv/libpqxx/archive/refs/tags/7.7.3.tar.gz
-          tar zxvf 7.7.3.tar.gz
-          cd libpqxx-7.7.3
-          mkdir build
-          cd build
-          ../../cmake-3.22.5/bin/cmake -DBUILD_SHARED_LIBS=off ..          
-          make -j2
-          mkdir dist
-          make DESTDIR=$PWD/dist install
-          cd ..
-          tar zcvf libpqxx-7.7.3-linux-arm64.tgz -C build/dist .
-          aws s3 cp ./libpqxx-7.7.3-linux-arm64.tgz s3://polarityio-prod-builds/libpqxx/7.7.3/libpqxx-7.7.3-linux-arm64.tgz
       - run:
           name: Make build
           command:  |
+            sudo apt install libpq-dev
             git clone https://github.com/asdf-vm/asdf.git .asdf --branch v0.10.0
             . .asdf/asdf.sh
             asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git
@@ -191,20 +173,20 @@ jobs:
 workflows:
   build-release:
     jobs:  
-      # - build-linux
+      - build-linux
       - build-linux-arm
-      # - build-mac
-      # - build-mac-arm
-      # - tag-it:
-      #     filters:
-      #       branches:
-      #         only:
-      #           - main
-      #     requires:
-      #       - build-linux
-      #       - build-linux-arm
-      #       - build-mac
-      #       - build-mac-arm
+      - build-mac
+      - build-mac-arm
+      - tag-it:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - build-linux
+            - build-linux-arm
+            - build-mac
+            - build-mac-arm
 
 orbs:
   aws-s3: circleci/aws-s3@1.0.15
