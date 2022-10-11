@@ -7,3 +7,6 @@ priv/casbinex_nif
 c_src/_deps/
 .vscode/
 deps/
+/.editorconfig
+
+/c_src/test/build

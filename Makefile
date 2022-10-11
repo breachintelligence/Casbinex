@@ -10,7 +10,7 @@ CASBIN_VERSION = 1.44.0
 
 INCLUDES += -I${ERL_EI_INCLUDE_DIR} -Ic_src/include -I$(DEPS_DIR)/include
 LIBS += -L${ERL_EI_LIBDIR} 
-SOURCES += c_src/casbin_nif.cpp c_src/pg_adapter.cpp c_src/pg_pool.cpp
+SOURCES += $(shell find c_src -name '*.cpp') #c_src/casbin_nif.cpp c_src/pg_adapter.cpp c_src/pg_pool.cpp c_src/migrator.cpp
 STATIC_LIBS = $(CASBIN_LIB)
 
 ifneq ($(OS),Windows_NT)
@@ -67,8 +67,12 @@ $(PRIV_DIR):
 $(LIB_NAME): $(DEPS_DIR)
 	/usr/bin/g++ -fPIC -O3 $(CXXFLAGS)  $(INCLUDES)  $(LIBS) -o $@  $(SOURCES)  $(STATIC_LIBS)
 
-clean:
-	$(RM) $(LIB_NAME)
-	$(RM) -rf $(DEPS_DIR)
+test: $(DEPS_DIR)
+	cd c_src/test && make && ./test
 
-.PHONY: all calling_from_make clean
+clean:
+	-$(RM) $(LIB_NAME)
+	-$(RM) -rf $(DEPS_DIR)
+	cd c_src/test && make clean
+
+.PHONY: all calling_from_make clean test
