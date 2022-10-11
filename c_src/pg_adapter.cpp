@@ -1,4 +1,5 @@
 #include "pg_adapter.h"
+#include "migrator.h"
 #include <casbin/casbin.h>
 #include <strings.h>
 #include <iostream>
@@ -29,22 +30,8 @@ _pgPool(connectionString.c_str())
   this->file_path = connectionString;
   this->filtered = false;
 
-  std::shared_ptr<pqxx::connection> c = _pgPool.connection();  
-  pqxx::work txn{reinterpret_cast<pqxx::connection&>(*c.get())};
-  txn.exec( R"(CREATE TABLE IF NOT EXISTS casbin_rule (
-    id integer NOT NULL,
-    ptype character varying,
-    v0 character varying,
-    v1 character varying,
-    v2 character varying,
-    v3 character varying,
-    v4 character varying,
-    v5 character varying,
-    v6 character varying
-    );)"
-  );
-
-  txn.commit();
+  PoolConnection c{_pgPool};
+  casbinex::Migrator::RunMigrations(c.connection());
 }
 
 // LoadPolicy loads all policy rules from the storage.
@@ -54,6 +41,10 @@ void PgAdapter::LoadPolicy(const std::shared_ptr<casbin::Model>& model)
   PoolConnection c{_pgPool};
   pqxx::work txn{ c.connection() };
   pqxx::result r{txn.exec("select ptype, v0, v1, v2, v3, v4, v5, v6 from casbin_rule")};
+
+  #ifdef DEBUG_LOG_QUERIES
+    std::cout << "select ptype, v0, v1, v2, v3, v4, v5, v6 from casbin_rule" << std::endl;
+  #endif
 
   model->ClearPolicy();
 
@@ -74,6 +65,10 @@ void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
 
   PoolConnection c{_pgPool};
   pqxx::work txn{ c.connection() };
+
+  #ifdef DEBUG_LOG_QUERIES
+    std::cout << "truncate table casbin_rule;" << std::endl;
+  #endif
 
   txn.exec("truncate table casbin_rule;");
   pqxx::stream_to stream = pqxx::stream_to::table(
@@ -118,6 +113,11 @@ void PgAdapter::SavePolicy(const std::shared_ptr<casbin::Model>& model)
       }
     }
   }
+
+
+  #ifdef DEBUG_LOG_QUERIES
+    std::cout << "streamed to table..." << std::endl;
+  #endif
 
   stream.complete();
   txn.commit();

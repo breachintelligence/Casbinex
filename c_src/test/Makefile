@@ -1,53 +1,77 @@
-#!make
-SHELL = /bin/sh
+MIX = mix
+CXXFLAGS := -std=c++17 -fPIC -Wall
 
-OBJS =  pg_adapter.o pg_pool.o
-CFLAGS = -std=c++17 -fPIC -Wall
-CC = g++
-INCLUDES = -I../include
+MIX_APP_PATH ?= .
+DEPS_DIR = ../_deps
+SRC_DIRS := $(shell realpath ../)
+CASBIN_LIB = $(DEPS_DIR)/casbin/casbin.a
+BUILD_DIR=build
 
-ifeq ($(OS),Windows_NT)
-    ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
-    else
-        ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-        endif
-        ifeq ($(PROCESSOR_ARCHITECTURE),x86)
-        endif
-    endif
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-			INCLUDES += -I../linux/include
-			LIBS =  -L../linux/lib ../linux/lib/casbin.a ../linux/lib/libpqxx.a -lpq
-    endif
-    ifeq ($(UNAME_S),Darwin)
-			LIBS = -L/usr/local/opt/libpq/lib -L/usr/local/opt/libpqxx/lib -L/usr/local/opt/erlang/lib/erlang/lib  -L../macos/lib ../macos/lib/casbin.a -lpq -lpqxx
-    endif
-    UNAME_P := $(shell uname -p)
-    ifeq ($(UNAME_P),x86_64)
+INC_DIRS += $(DEPS_DIR)/include ../
 
-    endif
-    ifneq ($(filter %86,$(UNAME_P)),)
+# Add a prefix to INC_DIRS. So moduleA would become -ImoduleA. GCC understands this -I flag
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-    endif
-    ifneq ($(filter arm%,$(UNAME_P)),)
+SOURCES := $(shell find $(SRC_DIRS)  -maxdepth 1 ! -name '*_nif.cpp' -name '*.cpp' -or -name '*.c' -or -name '*.s' )
+OBJS := $(SOURCES:%=$(BUILD_DIR)/%.o)
 
-    endif
+STATIC_LIBS = $(CASBIN_LIB)
+
+ifneq ($(OS),Windows_NT)
+	ifeq ($(shell uname),Darwin)
+		# is mac
+		HOMEBREW_PREFIX = ${HOMEBREW_REPOSITORY}
+		MACHINE_ARCH = x64
+		KERNEL_NAME = darwin
+
+		ifeq ($(shell uname -m), arm64)
+			MACHINE_ARCH = arm64
+		endif
+
+		INCLUDES +=  -I$(HOMEBREW_PREFIX)/opt/libpq/include -I$(HOMEBREW_PREFIX)/opt/libpqxx/include -Ic_src/macos/include
+		LIBS += -L$(HOMEBREW_PREFIX)/opt/libpq/lib -L$(HOMEBREW_PREFIX)/opt/libpqxx/lib -L${ERL_EI_LIBDIR} -lpqxx -lpqxx
+		CXXFLAGS += -flat_namespace -undefined suppress -dynamiclib 
+
+	else
+
+	# Is Linux 
+		KERNEL_NAME = linux
+
+		ifeq ($(shell uname -m), aarch64)
+			MACHINE_ARCH = arm64
+			INCLUDES += -I../linux/arm64/include
+			LIBS += -L../linux/arm64/lib 
+			STATIC_LIBS += ../linux/arm64/lib/libpqxx.a -lpq
+		else
+			MACHINE_ARCH = x64
+			INCLUDES += -I../linux/x64/include
+			LIBS += -L../linux/x64/lib 
+			STATIC_LIBS += ../linux/x64/lib/libpqxx.a -lpq
+		endif
+
+	endif
 endif
 
 
+CPPFLAGS := $(INC_FLAGS) $(INCLUDES)
 
-all:main
+all: test
 
-main:$(OBJS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -o test $(OBJS) main.cpp $(LIBS)
+./test: $(OBJS)
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(CXXFLAGS) -o test $(OBJS) main.cpp $(LIBS) $(STATIC_LIBS)
 
-pg_pool.o: ../pg_pool.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c ../pg_pool.cpp
+# Build step for C source
+$(BUILD_DIR)/%.c.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-pg_adapter.o: ../pg_adapter.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c ../pg_adapter.cpp
+# Build step for C++ source
+$(BUILD_DIR)/%.cpp.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
 
 clean:
-	-rm -f *.o core *.core
+	-rm -f *.o core *.core ../*.o ../*.d *.d
+	-rm -rf build
 
