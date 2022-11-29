@@ -3,71 +3,77 @@ defmodule Casbinex do
   Documentation for `Casbinex`.
   """
 
-  @on_load :load_nifs
+  alias Casbinex.Base
 
-  app = Mix.Project.config[:app]
-  def load_nifs do
-    path = :filename.join(:code.priv_dir(unquote(app)), 'casbinex_nif')
-    :ok = :erlang.load_nif(path, 0)
-  end
-
-  def createEnforcer(_modelpath, _policypath) do
-    raise "NIF createEnforcerdd/2 not implemented"
+  def createEnforcer(modelpath, policypath) do
+    Base.createEnforcer(modelpath, policypath)
   end
 
   def destroyEnforcer() do
-    raise "NIF destroyEnforcer/0 not implemented"
+    Base.destroyEnforcer()
   end
 
-  def enforce(_sub, _obj, _act) do
-    raise "NIF enforce/3 not implemented"
+  def enforce(sub, obj, act) do
+    Base.enforce(sub, obj, act)
   end
 
-  def addPolicy(_sub, _obj, _act) do
-    raise "NIF addPolicy/3 not implemented"
+  def addPolicy(sub, obj, act) do
+    Base.addPolicy(sub, obj, act)
   end
 
-  def removePolicy(_sub, _obj, _act) do
-    raise "NIF removePolicy/3 not implemented"
+  def removePolicy(sub, obj, act) do
+    Base.removePolicy(sub, obj, act)
   end
 
-  def addGroupingPolicy(_user, _group) do
-    raise "NIF addGroupingPolicy/2 not implemented"
+  def addGroupingPolicy(user, group) do
+    Base.addGroupingPolicy(user, group)
   end
 
-  def getUsersForRole(_role) do
-    raise "NIF getUsersForRole/1 not implemented"
+  def getUsersForRole(role) do
+    Base.getUsersForRole(role)
   end
 
-  def getRolesForUser(_user) do
-    raise "NIF getRolesForUser/1 not implemented"
+  def getRolesForUser(user) do
+    Base.getRolesForUser(user)
   end
 
-  def deleteRole(_role) do
-    raise "NIF deleteRole/1 not implemented"
+  def deleteRole(role) do
+    Base.deleteRole(role)
   end
 
-  def deleteRoleForUser(_user, _role) do
-    raise "NIF deleteRoleForUser/2 not implemented"
+  def deleteRoleForUser(user, role) do
+    Base.deleteRoleForUser(user, role)
   end
 
-  def deleteRolesForUser(_user) do
-    raise "NIF deleteRolesForUser/1 not implemented"
+  def deleteRolesForUser(user) do
+    Base.deleteRolesForUser(user)
   end
 
-  def addRoleForUser(_user, _role) do
-    raise "NIF addRoleForUser/2 not implemented"
+  def addRoleForUser(user, role) do
+    Base.addRoleForUser(user, role)
   end
 
-  def addRolesForUser(_user, _role) do
-    raise "NIF addRolesForUser/2 not implemented"
+  def addRolesForUser(user, roles) when is_list(roles) do
+    Base.addRolesForUser(user, roles)
   end
 
-  def getFilteredPolicy(_field_index, _fields) do
-    raise "NIF getFilteredPolicy/2 not implemented"
+  def addRolesForUser(user, roles) do
+    Base.addRoleForUser(user, roles)
   end
 
-  def removeFilteredPolicy(_field_index, _fields) do
-    raise "NIF removeFilteredPolicy/2 not implemented"
+  def getFilteredPolicy(fieldindex, fields) when is_list(fields) do
+    Base.getFilteredPolicy(fieldindex, fields)
+  end
+
+  def getFilteredPolicy(fieldindex, field) do
+    Base.getFilteredPolicy(fieldindex, [field])
+  end
+
+  def removeFilteredPolicy(fieldindex, fields) when is_list(fields) do
+    Base.removeFilteredPolicy(fieldindex, fields)
+  end
+
+  def removeFilteredPolicy(fieldindex, field) do
+    Base.removeFilteredPolicy(fieldindex, [field])
   end
 end
